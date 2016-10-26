@@ -308,6 +308,7 @@ struct CNodeState {
      * otherwise: whether this peer sends non-witnesses in cmpctblocks/blocktxns.
      */
     bool fSupportsDesiredCmpctVersion;
+    int nGetblocktxnMinHeight;
 
     CNodeState() {
         fCurrentlyConnected = false;
@@ -330,6 +331,7 @@ struct CNodeState {
         fHaveWitness = false;
         fWantsCmpctWitness = false;
         fSupportsDesiredCmpctVersion = false;
+        nGetblocktxnMinHeight = std::numeric_limits<int>::max();
     }
 };
 
@@ -4922,6 +4924,9 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         bool fPeerWantsWitness = State(pfrom->GetId())->fWantsCmpctWitness;
                         if (CanDirectFetch(consensusParams) && mi->second->nHeight >= chainActive.Height() - MAX_CMPCTBLOCK_DEPTH) {
                             CBlockHeaderAndShortTxIDs cmpctblock(block, fPeerWantsWitness);
+                            if (State(pfrom->GetId())->nGetblocktxnMinHeight > mi->second->nHeight) {
+                                State(pfrom->GetId())->nGetblocktxnMinHeight = mi->second->nHeight;
+                            }
                             pfrom->PushMessageWithFlag(fPeerWantsWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::CMPCTBLOCK, cmpctblock);
                         } else
                             pfrom->PushMessageWithFlag(fPeerWantsWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, block);
@@ -5450,8 +5455,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             return true;
         }
 
-        if (it->second->nHeight < chainActive.Height() - MAX_BLOCKTXN_DEPTH) {
-            LogPrint("net", "Peer %d sent us a getblocktxn for a block > %i deep", pfrom->id, MAX_BLOCKTXN_DEPTH);
+        if (it->second->nHeight < State(pfrom->GetId())->nGetblocktxnMinHeight) {
+            // If an older block is requested that this node didn't previously
+            // send a CMPCTBLOCK message for, just ignore the request instead
+            // of doing a potentially expensive block read.
+            LogPrint("net", "Peer %d sent us a getblocktxn for an out-of-bounds block.", pfrom->id);
             return true;
         }
 
@@ -5468,6 +5476,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             resp.txn[i] = block.vtx[req.indexes[i]];
         }
         pfrom->PushMessageWithFlag(State(pfrom->GetId())->fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCKTXN, resp);
+
+        State(pfrom->GetId())->nGetblocktxnMinHeight = it->second->nHeight + 1;
     }
 
 
@@ -6636,6 +6646,9 @@ bool SendMessages(CNode* pto, CConnman& connman)
                     CBlock block;
                     assert(ReadBlockFromDisk(block, pBestIndex, consensusParams));
                     CBlockHeaderAndShortTxIDs cmpctblock(block, state.fWantsCmpctWitness);
+                    if (state.nGetblocktxnMinHeight > pBestIndex->nHeight) {
+                        state.nGetblocktxnMinHeight = pBestIndex->nHeight;
+                    }
                     pto->PushMessageWithFlag(state.fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::CMPCTBLOCK, cmpctblock);
                     state.pindexBestHeaderSent = pBestIndex;
                 } else if (state.fPreferHeaders) {

@@ -589,12 +589,12 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
     def test_getblocktxn_handler(self, node, test_node, version):
-        # bitcoind won't respond for blocks whose height is more than 15 blocks
+        # bitcoind won't respond for blocks whose height is more than 5 blocks
         # deep.
-        MAX_GETBLOCKTXN_DEPTH = 10
+        MAX_CMPCTBLOCK_DEPTH = 5
         chain_height = node.getblockcount()
-        current_height = chain_height
-        while (current_height >= chain_height - MAX_GETBLOCKTXN_DEPTH):
+        current_height = chain_height - MAX_CMPCTBLOCK_DEPTH + 1
+        while current_height <= chain_height:
             block_hash = node.getblockhash(current_height)
             block = FromHex(CBlock(), node.getblock(block_hash, False))
 
@@ -621,10 +621,10 @@ class CompactBlocksTest(BitcoinTestFramework):
                         # Check that the witness matches
                         assert_equal(tx.calc_sha256(True), block.vtx[index].calc_sha256(True))
                 test_node.last_blocktxn = None
-            current_height -= 1
+            current_height += 1
 
         # Next request should be ignored, as we're past the allowed depth.
-        block_hash = node.getblockhash(current_height)
+        block_hash = node.getblockhash(chain_height)
         msg.block_txn_request = BlockTransactionsRequest(int(block_hash, 16), [0])
         test_node.send_and_ping(msg)
         with mininode_lock:
