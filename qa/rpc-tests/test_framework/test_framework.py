@@ -151,16 +151,16 @@ class BitcoinTestFramework(object):
 
         except JSONRPCException as e:
             print("JSONRPC error: "+e.error['message'])
-            traceback.print_tb(sys.exc_info()[2])
+            traceback.print_exc(file=sys.stdout)
         except AssertionError as e:
             print("Assertion failed: " + str(e))
-            traceback.print_tb(sys.exc_info()[2])
+            traceback.print_exc(file=sys.stdout)
         except KeyError as e:
             print("key not found: "+ str(e))
-            traceback.print_tb(sys.exc_info()[2])
+            traceback.print_exc(file=sys.stdout)
         except Exception as e:
             print("Unexpected exception caught during testing: " + repr(e))
-            traceback.print_tb(sys.exc_info()[2])
+            traceback.print_exc(file=sys.stdout)
         except KeyboardInterrupt as e:
             print("Exiting after " + repr(e))
 
@@ -177,6 +177,9 @@ class BitcoinTestFramework(object):
                 os.rmdir(self.options.root)
         else:
             print("Not cleaning up dir %s" % self.options.tmpdir)
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os.system("find '%s' -name debug.log -exec echo '::::: {} :::::' ';' -exec tail -n300 '{}' ';' | cat" % self.options.tmpdir)
 
         if success:
             print("Tests successful")
