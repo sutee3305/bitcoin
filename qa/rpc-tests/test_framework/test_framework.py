@@ -179,7 +179,7 @@ class BitcoinTestFramework(object):
             print("Not cleaning up dir %s" % self.options.tmpdir)
             sys.stdout.flush()
             sys.stderr.flush()
-            os.system("find '%s' -name debug.log -exec echo '::::: {} :::::' ';' -exec tail -n300 '{}' ';' | cat" % self.options.tmpdir)
+            os.system("""find '%s' -name debug.log -exec echo '::::: {} :::::' ';' -exec grep -ni 'sent us' '{}' ';' -exec bash -c 'grep -ni "" "{}" | tail -n300' ';' | cat""" % self.options.tmpdir)
 
         if success:
             print("Tests successful")
