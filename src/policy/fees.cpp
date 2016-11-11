@@ -327,13 +327,6 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     if (!fCurrentEstimate)
         return;
 
-    if (!entry.WasClearAtEntry()) {
-        // This transaction depends on other transactions in the mempool to
-        // be included in a block before it will be able to be included, so
-        // we shouldn't include it in our calculations
-        return;
-    }
-
     // Feerates are stored and reported as BTC-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
@@ -343,10 +336,8 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
 
 void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry)
 {
-    if (!entry.WasClearAtEntry()) {
-        // This transaction depended on other transactions in the mempool to
-        // be included in a block before it was able to be included, so
-        // we shouldn't include it in our calculations
+    if (!removeTx(entry.GetTx().GetHash())) {
+        // This transaction wasn't being tracked for fee estimation
         return;
     }
 
@@ -378,7 +369,6 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
         // transaction fees."
         return;
     }
-    nBestSeenHeight = nBlockHeight;
 
     // Only want to be updating estimates when our blockchain is synced,
     // otherwise we'll miscalculate how many blocks its taking to get included.
@@ -391,6 +381,9 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     // Repopulate the current block states
     for (unsigned int i = 0; i < entries.size(); i++)
         processBlockTx(nBlockHeight, entries[i]);
+
+    // Update best seen height after removals so they find the right mempool txs
+    nBestSeenHeight = nBlockHeight;
 
     // Update all exponential averages with the current block state
     feeStats.UpdateMovingAverages();
