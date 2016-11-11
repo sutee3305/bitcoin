@@ -529,7 +529,7 @@ public:
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
     void removeConflicts(const CTransaction &tx, std::vector<std::shared_ptr<const CTransaction>>* removed = NULL);
     void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
-                        std::vector<std::shared_ptr<const CTransaction>>* conflicts = NULL, bool fCurrentEstimate = true);
+                        std::vector<std::shared_ptr<const CTransaction>>* conflicts = NULL);
     void clear();
     void _clear(); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);

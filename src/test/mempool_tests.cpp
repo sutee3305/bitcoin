@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     /* after tx6 is mined, tx7 should move up in the sort */
     std::vector<CTransaction> vtx;
     vtx.push_back(tx6);
-    pool.removeForBlock(vtx, 1, NULL, false);
+    pool.removeForBlock(vtx, 1, NULL);
 
     sortedOrder.erase(sortedOrder.begin()+1);
     sortedOrder.pop_back();
