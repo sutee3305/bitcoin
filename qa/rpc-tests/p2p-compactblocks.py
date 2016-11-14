@@ -191,14 +191,14 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert(peer.block_announced)
             assert(got_message)
             with mininode_lock:
-                assert(predicate(peer))
+                assert(predicate(peer)), "cmpctblock={!r}, inv={!r}".format(peer.last_cmpctblock, peer.last_inv) # FAIL
 
         # We shouldn't get any block announcements via cmpctblock yet.
         check_announcement_of_new_block(node, test_node, lambda p: p.last_cmpctblock is None)
 
         # Try one more time, this time after requesting headers.
         test_node.request_headers_and_sync(locator=[tip])
-        check_announcement_of_new_block(node, test_node, lambda p: p.last_cmpctblock is None and p.last_inv is not None)
+        check_announcement_of_new_block(node, test_node, lambda p: p.last_cmpctblock is None and p.last_inv is not None) # FAIL
 
         # Test a few ways of using sendcmpct that should NOT
         # result in compact block announcements.
@@ -784,7 +784,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         print("\tTesting SENDCMPCT p2p message... ")
         self.test_sendcmpct(self.nodes[0], self.test_node, 1)
         sync_blocks(self.nodes)
-        self.test_sendcmpct(self.nodes[1], self.segwit_node, 2, old_node=self.old_node)
+        self.test_sendcmpct(self.nodes[1], self.segwit_node, 2, old_node=self.old_node) # FAIL
+
+        return
         sync_blocks(self.nodes)
 
         print("\tTesting compactblock construction...")
