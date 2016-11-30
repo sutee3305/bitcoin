@@ -7,6 +7,7 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase
+import sys
 
 '''
 SendHeadersTest -- test behavior of headers messages to announce blocks.
@@ -159,6 +160,7 @@ class BaseNode(SingleNodeConnCB):
             if self.last_inv != None:
                 compare_inv = [x.hash for x in self.last_inv.inv]
             if compare_inv != expect_inv:
+                print("Error: compare_inv {!r} != expect_inv {!r}".format(compare_inv, expect_inv), file=sys.stderr)
                 success = False
 
             hash_headers = []
@@ -166,6 +168,7 @@ class BaseNode(SingleNodeConnCB):
                 # treat headers as a list of block hashes
                 hash_headers = [ x.sha256 for x in self.last_headers.headers ]
             if hash_headers != expect_headers:
+                print("Error: hash_headers {!r} != expect_headers {!r}".format(hash_headers, expect_headers), file=sys.stderr)
                 success = False
 
             self.last_inv = None
