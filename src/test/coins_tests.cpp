@@ -16,6 +16,7 @@
 
 #include <boost/test/execution_monitor.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/unit_test_monitor.hpp>
 
 namespace
 {
@@ -683,7 +684,7 @@ BOOST_AUTO_TEST_CASE(ccoins_modify_new)
 void CheckWriteCoins(CAmount parent_value, CAmount child_value, CAmount expected_value, char parent_flags, char child_flags, char expected_flags)
 {
     SingleEntryCacheTest test(ABSENT, parent_value, parent_flags);
-    boost::execution_monitor monitor;
+    boost::execution_monitor& monitor = boost::unit_test::unit_test_monitor_t::instance();
 
     CAmount result_value;
     char result_flags;
