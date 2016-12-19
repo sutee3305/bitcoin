@@ -278,6 +278,15 @@ public:
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived; //!< time received by this node
+    /**
+     * Stable timestamp that never changes, and reflects the order a transaction
+     * was added to the wallet. Timestamp is based on the block time of the
+     * transaction for a transaction added as part of a block, otherwise the
+     * current time when the transaction was received, with the resulting
+     * timestamp adjusted so the timestamp order matches the order transactions
+     * were added to the wallet. More details can be found in
+     * CWallet::GetTimeSmart().
+     */
     unsigned int nTimeSmart;
     /**
      * From me flag is set to 1 for transactions that were created by the wallet
