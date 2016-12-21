@@ -409,7 +409,6 @@ public:
     void MarkDirty()
     {
         fCreditCached = false;
-        fImmatureCreditCached = false;
         fAvailableCreditCached = false;
         fImmatureCreditCached = false;
         fWatchDebitCached = false;
