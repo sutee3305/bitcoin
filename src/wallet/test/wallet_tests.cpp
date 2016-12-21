@@ -363,7 +363,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 {
     CWallet wallet;
     CWalletTx wtx(&wallet, MakeTransactionRef(coinbaseTxns.back()));
-    LOCK(cs_main);
+    LOCK2(cs_main, wallet.cs_wallet);
     wtx.hashBlock = chainActive.Tip()->GetBlockHash();
     wtx.nIndex = 0;
 
