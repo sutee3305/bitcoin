@@ -104,7 +104,7 @@ public:
     kj::Promise<void> appInit(AppInitContext context) override
     {
         context.releaseParams();
-        return loop.async(kj::mvCapture(context, [this](AppInitContext context) mutable {
+        return loop.async(kj::mvCapture(context, [this](AppInitContext context) {
             try {
                 context.getResults().setValue(impl->appInit());
             } catch (std::exception& e) {
@@ -145,7 +145,6 @@ public:
                     });
                     return call.send([&]() { return call.response->getValue(); });
                 });
-
         });
         return kj::READY_NOW;
     }
@@ -165,7 +164,6 @@ public:
                 });
                 return call.send([&]() { return call.response->getValue(); });
             });
-
         });
         return kj::READY_NOW;
     }
@@ -196,7 +194,6 @@ public:
                 });
                 return call.send();
             });
-
         });
         return kj::READY_NOW;
     }
@@ -212,7 +209,6 @@ public:
                 });
                 return call.send();
             });
-
         });
         return kj::READY_NOW;
     }
@@ -227,7 +223,6 @@ public:
                 });
                 return call.send();
             });
-
         });
         return kj::READY_NOW;
     }
@@ -244,7 +239,6 @@ public:
                 });
                 return call.send();
             });
-
         });
         return kj::READY_NOW;
     }
@@ -264,7 +258,6 @@ public:
                     });
                     return call.send();
                 });
-
         });
         return kj::READY_NOW;
     }
@@ -284,7 +277,6 @@ public:
                     });
                     return call.send();
                 });
-
         });
         return kj::READY_NOW;
     }
@@ -299,7 +291,6 @@ public:
                 });
                 return call.send();
             });
-
         });
         return kj::READY_NOW;
     }
@@ -321,15 +312,15 @@ public:
         return kj::READY_NOW;
     }
 
-    kj::Promise<void> wallet(WalletContext context) override
+    kj::Promise<void> getWallet(GetWalletContext context) override
     {
-        context.getResults().setWallet(messages::Wallet::Client(kj::heap<WalletServer>(impl->wallet())));
+        context.getResults().setWallet(messages::Wallet::Client(kj::heap<WalletServer>(impl->getWallet())));
         return kj::READY_NOW;
     }
 
     kj::Promise<void> testInitMessage(TestInitMessageContext context) override
     {
-        return loop.async(kj::mvCapture(context, [this](TestInitMessageContext context) mutable {
+        return loop.async(kj::mvCapture(context, [this](TestInitMessageContext context) {
             std::string message = serialize::ToString(context.getParams().getMessage());
             context.releaseParams();
             impl->testInitMessage(message);

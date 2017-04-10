@@ -43,7 +43,6 @@ void BuildNodeStats(messages::NodeStats::Builder&& builder, const CNodeStats& no
     builder.setPingWait(nodeStats.dPingWait);
     builder.setMinPing(nodeStats.dMinPing);
     builder.setAddrLocal(nodeStats.addrLocal);
-    kj::ArrayPtr<const kj::byte> addr = builder.getAddr();
     CDataStream addrStream(SER_DISK, CLIENT_VERSION);
     nodeStats.addr.Serialize(addrStream);
     builder.setAddr(

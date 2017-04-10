@@ -101,13 +101,13 @@ public:
     using NodesStats = std::vector<std::tuple<CNodeStats, bool, CNodeStateStats>>;
     virtual bool getNodesStats(NodesStats& stats) = 0;
 
-    //! Return Interface for accessing the wallet.
-    virtual std::unique_ptr<Wallet> wallet() = 0;
+    //! Return interface for accessing the wallet.
+    virtual std::unique_ptr<Wallet> getWallet() = 0;
 
     virtual void testInitMessage(const std::string& message) = 0;
 };
 
-//! Interface for calling wallet methods.
+//! Interface for accessing a wallet.
 class Wallet
 {
 public:

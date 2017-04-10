@@ -24,7 +24,7 @@ interface Node {
     handleNotifyHeaderTip @17 (callback: NotifyHeaderTipCallback) -> (handler :Handler);
     handleBannedListChanged @18 (callback: BannedListChangedCallback) -> (handler :Handler);
     getNodesStats @19 () -> (stats :List(NodeStats));
-    wallet @20 () -> (wallet :Wallet);
+    getWallet @20 () -> (wallet :Wallet);
 
     testInitMessage @21 (message :Text) -> ();
 }

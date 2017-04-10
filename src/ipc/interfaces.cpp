@@ -126,7 +126,7 @@ public:
         }
         return false;
     }
-    std::unique_ptr<Wallet> wallet() override { return util::MakeUnique<WalletImpl>(*pwalletMain); }
+    std::unique_ptr<Wallet> getWallet() override { return util::MakeUnique<WalletImpl>(*pwalletMain); }
     void testInitMessage(const std::string& message) override { uiInterface.InitMessage(message); }
 
     boost::thread_group threadGroup;

@@ -412,9 +412,9 @@ public:
         });
     }
 
-    std::unique_ptr<Wallet> wallet() override
+    std::unique_ptr<Wallet> getWallet() override
     {
-        auto call = util::MakeCall(loop, [&]() { return client.walletRequest(); });
+        auto call = util::MakeCall(loop, [&]() { return client.getWalletRequest(); });
         return call.send([&]() { return util::MakeUnique<WalletClient>(loop, call.response->getWallet()); });
     }
 

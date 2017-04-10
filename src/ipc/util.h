@@ -94,7 +94,7 @@ class EventLoop
 public:
     //! Construct event loop object.
     //!
-    //! Thread argument is optional thread handle to join on destruction.
+    //! @param[in]  thread  optional thread handle to join on destruction.
     EventLoop(std::thread&& thread = {});
     ~EventLoop();
 
@@ -145,14 +145,14 @@ struct Call;
 template <typename GetRequest, typename Params, typename Results>
 struct Call<GetRequest, capnp::Request<Params, Results>>
 {
-    //! Constructor. See MakeCall wrapper for description of arguments.
+    //! Constructor. See #MakeCall wrapper for description of arguments.
     Call(EventLoop& loop, GetRequest&& getRequest) : loop(loop), getRequest(std::forward<GetRequest>(getRequest)) {}
 
     //! Send IPC request and block waiting for response.
     //!
     //! @param[in]  getReturn  callable that will run on the event loop thread
     //!                        after the IPC response is received.
-    //! @return value returned by getReturn callable
+    //! @return                value returned by #getReturn callable
     template <typename GetReturn>
     ResultOf<GetReturn> send(GetReturn&& getReturn)
     {
@@ -190,7 +190,7 @@ Call<GetRequest> MakeCall(EventLoop& loop, GetRequest&& getRequest)
     return {loop, std::move(getRequest)};
 }
 
-//! Substitute for for C++14 make_unique.
+//! Substitute for for C++14 std::make_unique.
 template <typename T, typename... Args>
 std::unique_ptr<T> MakeUnique(Args&&... args)
 {

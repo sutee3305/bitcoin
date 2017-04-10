@@ -1,20 +1,20 @@
-Bitcoin Interprocess Communication
-==================================
+src/ipc -- Bitcoin Interprocess Communication
+=============================================
 
-The IPC functions and classes in `src/ipc/` allow the `bitcoin-qt` process to
-fork a `bitcoind` process and communicate with it over a socketpair. This gives
-the `bitcoin-qt` code a bit of modularity, avoiding a monolithic architecture
-where UI, P2P, wallet, consensus, and database code all runs in a single
-process.
+The IPC functions and classes in [`src/ipc`](.) allow the `bitcoin-qt` process
+to fork a `bitcoind` process and communicate with it over a [socket
+pair](https://linux.die.net/man/3/socketpair). This gives the `bitcoin-qt` code
+a bit of modularity, avoiding a monolithic architecture where UI, P2P, wallet,
+consensus, and database code all runs in a single process.
 
 In the future, the IPC mechanism could be extended to allow other subdivisions
 of functionality. For example, wallet code could run in a separate process from
 P2P code. Also in the future, IPC sockets could also be exposed more publicly.
 For example, exposed IPC server sockets could allow a `bitcoin-qt` process to
 control a `bitcoind` process other than the one it spawns internally. These
-changes would be straightforward to implement, but would create security,
-backwards-compatibility, complexity, and maintainablity concerns, so would
-require more discussion.
+changes would be straightforward to implement, but would have security,
+backwards-compatibility, and maintainablity tradeoffs, so would require more
+discussion.
 
 
 Implementation Details
@@ -22,66 +22,77 @@ Implementation Details
 
 The IPC protocol used is _[Cap'n Proto](https://capnproto.org/)_, but this
 protocol could be swapped out for another protocol (like JSON-RPC with long
-polling) without changing code outside of the `src/ipc/` directory. No _Cap'n
-Proto_ types are used in public headers.
+polling) without changing code outside of the [`src/ipc`](.) directory. No
+_Cap'n Proto_ types are exposed in IPC public headers.
 
 
 ### IPC Source Files ###
 
-Here are the important files in the `src/ipc/` directory:
+Here are the important files in the [`src/ipc`](.) directory:
 
 
 #### Public headers ####
 
-* `interfaces.h` – Defines `ipc::Node`, `ipc::Wallet`, `ipc::Handler` interfaces.
+* [`interfaces.h`](interfaces.h)
+  – Defines `ipc::Node`, `ipc::Wallet`, `ipc::Handler` interfaces.
 
-* `client.h` – Declares `ipc::StartClient` function which spawns a `bitcoind`
-               process and returns an `ipc::Node` object controlling it over a
-               socket.
+* [`client.h`](client.h)
+  – Declares `ipc::StartClient` function which spawns a `bitcoind` process and
+    returns an `ipc::Node` object controlling it over a socket.
 
-* `server.h` – Declares `ipc::StartServer` function which allows a `bitcoind`
-               process to open a socket file descriptor and respond to remote
-               commands.
-
+* [`server.h`](server.h)
+  – Declares `ipc::StartServer` function which allows a `bitcoind` process to
+    open a socket file descriptor and respond to remote commands.
 
 #### Private headers and source files ####
 
-* `interfaces.cpp` – In-process implementations of `ipc::Node`, `ipc::Wallet`,
-                     and `ipc::Handler` interfaces.
+* [`interfaces.cpp`](interfaces.cpp) –
+  In-process implementations of `ipc::Node`, `ipc::Wallet`, and `ipc::Handler`
+  interfaces that call libbitcoin functions directly.
 
-* `client.cpp` – Out-of-process implementations of `ipc::Node`, `ipc::Wallet`,
-                `ipc::Handler` interfaces that forward calls to a socket.
+* [`client.cpp`](client.cpp)
+  – Out-of-process implementations of `ipc::Node`, `ipc::Wallet`, `ipc::Handler`
+    interfaces that forward calls to a `bitcoind` process over a socket.
 
-* `server.cpp` – Server IPC code responding to client requests.
+* [`server.cpp`](server.cpp)
+  – Server IPC code responding to client requests.
 
-* `messages.capnp` – IPC interface definition.
+* [`messages.capnp`](messages.capnp)
+  – Internal _Cap'n Proto_ interface definitions defining the socket protocol.
 
-* `serialize.{h,cpp}` – Helper functions for translating IPC messages.
+* [`serialize.h`](serialize.h), [`serialize.cpp`](serialize.cpp)
+  – Helper functions for translating IPC messages.
 
-* `util.{h,cpp}` – Helper functions for making and receiving IPC calls.
+* [`util.h`](util.h), [`util.cpp`](util.cpp)
+  – Helper functions for making and receiving IPC calls.
 
 
 ### IPC Classes ###
 
-* `ipc::Node` – public abstract base class describing an interface for
-                controlling a `bitcoind` node. Defined in `interfaces.h`.
+* `ipc::Node`
+  – Public abstract base class describing an interface for controlling a
+    `bitcoind` node. Defined in [`interfaces.h`](interfaces.h).
 
-* `ipc::NodeImpl` – private concrete subclass of `ipc::Node` which implements
-                    the node interface by calling `libbitcoin` functions in the
-                    current `bitcoind` process. Defined in `interfaces.cpp`.
+* `ipc::NodeImpl`
+  – Private concrete subclass of `ipc::Node` which implements the node
+    interface by calling `libbitcoin` functions in the current `bitcoind`
+    process. Defined in [`interfaces.cpp`](interfaces.cpp).
 
-* `ipc::NodeClient` – private concrete subclass of `ipc::Node` which implements
-                      the node interface by communicating with a `bitcoind`
-                      instance over a socket. Defined in `client.cpp`.
+* `ipc::NodeClient`
+  – Private concrete subclass of `ipc::Node` which implements the node
+    interface by communicating with a `bitcoind` instance over a socket.
+    Defined in [`client.cpp`](client.cpp).
 
-* `ipc::messages::Node` – private [capnp interface](https://capnproto.org/language.html#interfaces)
-                          describing communication across the IPC socket. Defined in
-                          `messages.capnp`.
+* `ipc::messages::Node`
+  – Private [capnp interface](https://capnproto.org/language.html#interfaces)
+    describing communication across the IPC socket. Defined in
+    [`messages.capnp`](messages.capnp).
 
-* `ipc::NodeServer` – private [capnp object](https://capnproto.org/rpc.html#distributed-objects)
-                      implementing the `ipc::messages::Node` interface and
-                      handling incoming requests by forwarding them to an
-                      `ipc::NodeImpl` object. Defined in `server.cpp`.
+* `ipc::NodeServer`
+  – Private [capnp object](https://capnproto.org/rpc.html#distributed-objects)
+    implementing the `ipc::messages::Node` interface and handling incoming
+    requests by forwarding them to an `ipc::NodeImpl` object. Defined in
+    [`server.cpp`](server.cpp).
 
 `ipc::Wallet` and `ipc::Handler` are two other abstract interfaces similar to
 `ipc::Node`, which allow an IPC client to keep track of wallets and callback
@@ -99,10 +110,10 @@ handlers, respectively. Both of these interfaces have corresponding private
   can make IPC calls across the socket.
 
 * When the `bitcoind` process starts, it calls `ipc::StartServer()`, which
-  parses the command line to determine the socket file descriptor, then
-  instantiates `ipc::NodeServer` and `ipc::NodeImpl` objects to handle requests
-  from the socket. Finally it invokes the capnp event loop, which just sits idle
-  until the first IPC request arrives.
+  parses the command line to determine the socket file descriptor to listen for
+  IPC requests from, then instantiates `ipc::NodeServer` and `ipc::NodeImpl`
+  objects to handle the requests. After this, it invokes the capnp event loop,
+  which just sits idle until the first request arrives.
 
 ### IPC Call Sequence Example ###
 
@@ -114,7 +125,7 @@ handlers, respectively. Both of these interfaces have corresponding private
 ### IPC Callback Sequence Example ###
 
 * When an IPC client calls the `ipc::NodeClient::handleNotifyBlockTip()` method
-  with a `std::function` argument, the method will first construct a
+  with a `std::function` argument, the method will first construct an
   `ipc::NotifyBlockTipCallbackServer` [capnp
   object](https://capnproto.org/rpc.html#distributed-objects) wrapping the
   `std::function`. It will then include a reference to this object inside the IPC
@@ -133,19 +144,19 @@ handlers, respectively. Both of these interfaces have corresponding private
 
 * Client methods like `ipc::NodeClient::getNodesStats()` will post work to the
   capnp event loop thread to send RPC requests and process responses, but will
-  leave the event loop free to do other work between the sending the request and
-  receiving the response. This means that multiple IPC requests can be ongoing
-  simultaneously, and server callbacks will still continue to be processed.
+  leave the event loop free to do other work between the sending the request
+  and receiving the response. This means that multiple client IPC requests can
+  execute simultaneously, and server callbacks can continue to be processed
+  even while client IPC requests are pending.
 
 * Server methods like `ipc::NodeServer::getNodesStats()` are called by _Cap'n
   Proto_ from the event loop thread, so it is important that they either run
   very quickly without blocking, or use an asynchronous mechanism like the
-  `ipc::util::EventLoop::async()` helper to avoid tying up the server and
-  preventing it from processing requests and sending notifications while the
+  `ipc::util::EventLoop::async()` helper to avoid tying up the server while the
   call is running. `ipc::NodeServer::appInit()` is an example of a slow IPC
   method that runs asynchronously using the async helper.
 
 * Callback methods like `ipc::NotifyBlockTipCallbackServer::call()` are similar
   to server methods, and are also called from the event loop thread by _Cap'n
   Proto_. If they are blocking or slow, they also need to be implemented using
-  an async mechanism to avoid slowing down other calls and notifications.
+  an async mechanism to avoid slowing down other calls and callbacks.

@@ -26,12 +26,13 @@ EventLoop::EventLoop(std::thread&& thread) : ioContext(kj::setupAsyncIo()), thre
 
 EventLoop::~EventLoop()
 {
-    KJ_ASSERT(waitFd == -1);
     KJ_ASSERT(postFd == -1);
     if (thread.joinable()) {
         thread.join();
     }
+    KJ_ASSERT(waitFd == -1);
 }
+
 void EventLoop::loop()
 {
     kj::Own<kj::AsyncIoStream> waitStream{
